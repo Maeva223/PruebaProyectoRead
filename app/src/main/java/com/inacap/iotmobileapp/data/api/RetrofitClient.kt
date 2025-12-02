@@ -1,11 +1,12 @@
 package com.inacap.iotmobileapp.data.api
 
+import com.inacap.iotmobileapp.utils.ApiConfig
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 object RetrofitClient {
 
-    // URL base de OpenWeatherMap API
+    // Cambiamos la URL Base a OpenWeatherMap API
     private const val BASE_URL = "https://api.openweathermap.org/data/2.5/"
 
     private val retrofit by lazy {

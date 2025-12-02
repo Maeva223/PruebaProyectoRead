@@ -31,7 +31,7 @@ class SensorsViewModel : ViewModel() {
         viewModelScope.launch {
             while (true) {
                 fetchSensorData()
-                delay(5000) // Actualizar cada 5 segundos
+                delay(10000) // Actualizar cada 10 segundos (API gratis tiene límite)
             }
         }
     }
@@ -42,25 +42,32 @@ class SensorsViewModel : ViewModel() {
             _errorMessage.value = ""
 
             try {
-                // Llamar a tu Backend Node.js
-                val response = apiService.getBackendSensorData()
+                // Llamar a la API real de OpenWeatherMap
+                val response = apiService.getWeatherData(
+                    city = ApiConfig.DEFAULT_CITY,
+                    apiKey = ApiConfig.OPENWEATHER_API_KEY
+                )
 
                 _sensorData.value = SensorData(
-                    temperature = response.temperature,
-                    humidity = response.humidity.toInt(), // Convertir a Int para la UI
-                    city = "Lab IoT (Node.js)",
-                    timestamp = System.currentTimeMillis()
+                    temperature = response.main.temp,
+                    humidity = response.main.humidity,
+                    city = response.name,
+                    timestamp = response.dt * 1000 // API devuelve segundos, Java usa millis
                 )
 
             } catch (e: Exception) {
-                _errorMessage.value = "Error al conectar con Node.js: ${e.message}"
+                _errorMessage.value = when {
+                    e.message?.contains("401") == true -> "API Key inválida. Revisa ApiConfig.kt"
+                    e.message?.contains("404") == true -> "Ciudad no encontrada"
+                    else -> "Error de conexión: ${e.message}"
+                }
                 
-                // Mantener datos anteriores o mostrar simulados si falla la conexión
+                // Si falla, mantenemos el último dato o mostramos null
                 if (_sensorData.value == null) {
                     _sensorData.value = SensorData(
                         temperature = 0.0,
                         humidity = 0,
-                        city = "Desconectado",
+                        city = "Sin Conexión",
                         timestamp = System.currentTimeMillis()
                     )
                 }

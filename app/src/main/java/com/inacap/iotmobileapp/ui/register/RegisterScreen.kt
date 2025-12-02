@@ -15,6 +15,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.inacap.iotmobileapp.data.api.RegisterRequest
+import com.inacap.iotmobileapp.data.api.RetrofitClient
 import com.inacap.iotmobileapp.data.database.AppDatabase
 import com.inacap.iotmobileapp.data.database.entities.User
 import com.inacap.iotmobileapp.data.repository.UserRepository
@@ -112,6 +114,9 @@ fun RegisterScreenPreview() {
 class RegisterViewModel(application: Application) : AndroidViewModel(application) {
     private val database = AppDatabase.getDatabase(application)
     private val repository = UserRepository(database.userDao(), database.recoveryCodeDao())
+    // Agregamos el servicio API
+    private val apiService = RetrofitClient.sensorApiService
+    
     private val _uiState = MutableStateFlow(RegisterUiState())
     val uiState: StateFlow<RegisterUiState> = _uiState
 
@@ -149,19 +154,50 @@ class RegisterViewModel(application: Application) : AndroidViewModel(application
         }
 
         _uiState.value = _uiState.value.copy(isLoading = true)
+        
         viewModelScope.launch {
-            val user = User(nombres = nombres, apellidos = apellidos, email = email, password = password)
-            val result = repository.registerUser(user)
-            result.fold(
-                onSuccess = {
-                    _uiState.value = _uiState.value.copy(isLoading = false, successMessage = "Registro exitoso")
-                    kotlinx.coroutines.delay(1500)
-                    onSuccess()
-                },
-                onFailure = { error ->
-                    _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = error.message ?: "Error al registrar")
+            try {
+                // 1. Intentar registrar en el Backend Node.js
+                val request = RegisterRequest(
+                    name = nombres,
+                    lastName = apellidos,
+                    email = email,
+                    password = password
+                )
+                
+                val response = apiService.registerUser(request)
+                
+                if (response.isSuccessful) {
+                    // Registro exitoso en Backend
+                    
+                    // 2. Guardar también en Base de Datos Local (para login offline o caché)
+                    val userLocal = User(nombres = nombres, apellidos = apellidos, email = email, password = password)
+                    val localResult = repository.registerUser(userLocal)
+                    
+                    localResult.fold(
+                        onSuccess = {
+                            _uiState.value = _uiState.value.copy(isLoading = false, successMessage = "Registro exitoso en Servidor y Local")
+                            kotlinx.coroutines.delay(1500)
+                            onSuccess()
+                        },
+                        onFailure = {
+                            // Si falla local pero funcionó en servidor, igual lo consideramos éxito (o advertencia)
+                             _uiState.value = _uiState.value.copy(isLoading = false, successMessage = "Registro exitoso (solo servidor)")
+                            kotlinx.coroutines.delay(1500)
+                            onSuccess()
+                        }
+                    )
+                } else {
+                    // Error del Backend (ej: 409 Conflict - Email ya existe)
+                    val errorBody = response.errorBody()?.string()
+                    val errorMsg = if (response.code() == 409) "El correo ya está registrado" else "Error del servidor: ${response.code()}"
+                    _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = errorMsg)
                 }
-            )
+            } catch (e: Exception) {
+                // Error de conexión (servidor caído, sin internet)
+                // Opción: Permitir registro solo local o mostrar error
+                _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = "Error de conexión: ${e.message}")
+            }
         }
     }
 }

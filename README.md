@@ -1,3 +1,4 @@
+
 # 📱 IoT Mobile App - INACAP La Serena
 
 Aplicación móvil Android para IoT desarrollada con Jetpack Compose, Room Database y arquitectura MVVM.
@@ -265,3 +266,4 @@ Este proyecto es académico y fue desarrollado para la evaluación sumativa II d
 ---
 
 **¡Éxito en tu presentación! 🎓**
+

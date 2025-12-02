@@ -31,7 +31,7 @@ class SensorsViewModel : ViewModel() {
         viewModelScope.launch {
             while (true) {
                 fetchSensorData()
-                delay(10000) // Actualizar cada 10 segundos (API gratis tiene límite)
+                delay(5000) // Actualizar cada 5 segundos
             }
         }
     }
@@ -42,31 +42,28 @@ class SensorsViewModel : ViewModel() {
             _errorMessage.value = ""
 
             try {
-                val response = apiService.getWeatherData(
-                    city = ApiConfig.DEFAULT_CITY,
-                    apiKey = ApiConfig.OPENWEATHER_API_KEY
-                )
+                // Llamar a tu Backend Node.js
+                val response = apiService.getBackendSensorData()
 
                 _sensorData.value = SensorData(
-                    temperature = response.main.temp,
-                    humidity = response.main.humidity,
-                    city = response.name,
-                    timestamp = response.dt
+                    temperature = response.temperature,
+                    humidity = response.humidity.toInt(), // Convertir a Int para la UI
+                    city = "Lab IoT (Node.js)",
+                    timestamp = System.currentTimeMillis()
                 )
 
             } catch (e: Exception) {
-                _errorMessage.value = when {
-                    e.message?.contains("401") == true -> "API Key inválida. Configurar en ApiConfig.kt"
-                    e.message?.contains("404") == true -> "Ciudad no encontrada"
-                    else -> "Error de conexión: ${e.message}"
+                _errorMessage.value = "Error al conectar con Node.js: ${e.message}"
+                
+                // Mantener datos anteriores o mostrar simulados si falla la conexión
+                if (_sensorData.value == null) {
+                    _sensorData.value = SensorData(
+                        temperature = 0.0,
+                        humidity = 0,
+                        city = "Desconectado",
+                        timestamp = System.currentTimeMillis()
+                    )
                 }
-                // Si hay error, usar valores de respaldo
-                _sensorData.value = SensorData(
-                    temperature = 18.0,
-                    humidity = 45,
-                    city = "La Serena (simulado)",
-                    timestamp = System.currentTimeMillis() / 1000
-                )
             } finally {
                 _isLoading.value = false
             }

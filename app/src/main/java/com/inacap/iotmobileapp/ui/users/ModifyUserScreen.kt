@@ -10,6 +10,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -18,6 +19,7 @@ import com.inacap.iotmobileapp.data.database.AppDatabase
 import com.inacap.iotmobileapp.data.database.entities.User
 import com.inacap.iotmobileapp.data.repository.UserRepository
 import com.inacap.iotmobileapp.ui.components.*
+import com.inacap.iotmobileapp.ui.theme.IoTMobileAppTheme
 import com.inacap.iotmobileapp.utils.Validators
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -37,6 +39,27 @@ fun ModifyUserScreen(userId: Long, onNavigateBack: () -> Unit) {
         viewModel.loadUser(userId)
     }
 
+    ModifyUserScreenContent(
+        uiState = uiState,
+        onNombresChange = viewModel::onNombresChange,
+        onApellidosChange = viewModel::onApellidosChange,
+        onEmailChange = viewModel::onEmailChange,
+        onModify = { viewModel.onModify(onNavigateBack) },
+        onDelete = { viewModel.onDelete(onNavigateBack) },
+        onNavigateBack = onNavigateBack
+    )
+}
+
+@Composable
+fun ModifyUserScreenContent(
+    uiState: ModifyUserUiState,
+    onNombresChange: (String) -> Unit,
+    onApellidosChange: (String) -> Unit,
+    onEmailChange: (String) -> Unit,
+    onModify: () -> Unit,
+    onDelete: () -> Unit,
+    onNavigateBack: () -> Unit
+) {
     Scaffold(
         topBar = {
             AppTopBar(title = "MODIFICAR DATOS USUARIO", onNavigateBack = onNavigateBack)
@@ -53,16 +76,16 @@ fun ModifyUserScreen(userId: Long, onNavigateBack: () -> Unit) {
             if (uiState.isLoading) {
                 CircularProgressIndicator()
             } else {
-                AppTextField(value = uiState.nombres, onValueChange = { viewModel.onNombresChange(it) }, label = "INGRESE NOMBRES")
+                AppTextField(value = uiState.nombres, onValueChange = onNombresChange, label = "INGRESE NOMBRES")
                 Spacer(modifier = Modifier.height(12.dp))
-                AppTextField(value = uiState.apellidos, onValueChange = { viewModel.onApellidosChange(it) }, label = "INGRESE APELLIDOS")
+                AppTextField(value = uiState.apellidos, onValueChange = onApellidosChange, label = "INGRESE APELLIDOS")
                 Spacer(modifier = Modifier.height(12.dp))
-                AppTextField(value = uiState.email, onValueChange = { viewModel.onEmailChange(it) }, label = "INGRESE E-MAIL", keyboardType = KeyboardType.Email)
+                AppTextField(value = uiState.email, onValueChange = onEmailChange, label = "INGRESE E-MAIL", keyboardType = KeyboardType.Email)
                 Spacer(modifier = Modifier.height(24.dp))
 
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Button(
-                        onClick = { viewModel.onModify(onNavigateBack) },
+                        onClick = onModify,
                         modifier = Modifier.weight(1f),
                         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                     ) {
@@ -70,7 +93,7 @@ fun ModifyUserScreen(userId: Long, onNavigateBack: () -> Unit) {
                     }
 
                     Button(
-                        onClick = { viewModel.onDelete(onNavigateBack) },
+                        onClick = onDelete,
                         modifier = Modifier.weight(1f),
                         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
                     ) {
@@ -83,6 +106,26 @@ fun ModifyUserScreen(userId: Long, onNavigateBack: () -> Unit) {
                 SuccessMessage(message = uiState.successMessage)
             }
         }
+    }
+}
+
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+fun ModifyUserScreenPreview() {
+    IoTMobileAppTheme {
+        ModifyUserScreenContent(
+            uiState = ModifyUserUiState(
+                nombres = "Juan",
+                apellidos = "Pérez",
+                email = "juan.perez@example.com"
+            ),
+            onNombresChange = {},
+            onApellidosChange = {},
+            onEmailChange = {},
+            onModify = {},
+            onDelete = {},
+            onNavigateBack = {}
+        )
     }
 }
 

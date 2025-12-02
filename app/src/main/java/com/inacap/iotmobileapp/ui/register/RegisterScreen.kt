@@ -10,6 +10,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -36,6 +37,29 @@ fun RegisterScreen(
     )
     val uiState by viewModel.uiState.collectAsState()
 
+    RegisterScreenContent(
+        uiState = uiState,
+        onNombresChange = viewModel::onNombresChange,
+        onApellidosChange = viewModel::onApellidosChange,
+        onEmailChange = viewModel::onEmailChange,
+        onPasswordChange = viewModel::onPasswordChange,
+        onConfirmPasswordChange = viewModel::onConfirmPasswordChange,
+        onRegister = { viewModel.onRegister(onRegisterSuccess) },
+        onNavigateBack = onNavigateBack
+    )
+}
+
+@Composable
+fun RegisterScreenContent(
+    uiState: RegisterUiState,
+    onNombresChange: (String) -> Unit,
+    onApellidosChange: (String) -> Unit,
+    onEmailChange: (String) -> Unit,
+    onPasswordChange: (String) -> Unit,
+    onConfirmPasswordChange: (String) -> Unit,
+    onRegister: () -> Unit,
+    onNavigateBack: () -> Unit
+) {
     Scaffold(
         topBar = {
             AppTopBar(title = "REGISTRO DE USUARIO", onNavigateBack = onNavigateBack)
@@ -49,22 +73,39 @@ fun RegisterScreen(
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            AppTextField(value = uiState.nombres, onValueChange = { viewModel.onNombresChange(it) }, label = "INGRESE NOMBRES")
+            AppTextField(value = uiState.nombres, onValueChange = onNombresChange, label = "INGRESE NOMBRES")
             Spacer(modifier = Modifier.height(12.dp))
-            AppTextField(value = uiState.apellidos, onValueChange = { viewModel.onApellidosChange(it) }, label = "INGRESE APELLIDOS")
+            AppTextField(value = uiState.apellidos, onValueChange = onApellidosChange, label = "INGRESE APELLIDOS")
             Spacer(modifier = Modifier.height(12.dp))
-            AppTextField(value = uiState.email, onValueChange = { viewModel.onEmailChange(it) }, label = "INGRESE E-MAIL", keyboardType = KeyboardType.Email)
+            AppTextField(value = uiState.email, onValueChange = onEmailChange, label = "INGRESE E-MAIL", keyboardType = KeyboardType.Email)
             Spacer(modifier = Modifier.height(12.dp))
-            PasswordTextField(value = uiState.password, onValueChange = { viewModel.onPasswordChange(it) }, label = "INGRESE CLAVE")
+            PasswordTextField(value = uiState.password, onValueChange = onPasswordChange, label = "INGRESE CLAVE")
             Spacer(modifier = Modifier.height(12.dp))
-            PasswordTextField(value = uiState.confirmPassword, onValueChange = { viewModel.onConfirmPasswordChange(it) }, label = "REPETIR CLAVE")
+            PasswordTextField(value = uiState.confirmPassword, onValueChange = onConfirmPasswordChange, label = "REPETIR CLAVE")
             Spacer(modifier = Modifier.height(24.dp))
-            AppButton(text = "REGISTRAR", onClick = { viewModel.onRegister(onRegisterSuccess) }, enabled = !uiState.isLoading)
+            AppButton(text = "REGISTRAR", onClick = onRegister, enabled = !uiState.isLoading)
             Spacer(modifier = Modifier.height(16.dp))
             ErrorMessage(message = uiState.errorMessage)
             SuccessMessage(message = uiState.successMessage)
             if (uiState.isLoading) { Spacer(modifier = Modifier.height(16.dp)); CircularProgressIndicator() }
         }
+    }
+}
+
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+fun RegisterScreenPreview() {
+    MaterialTheme {
+        RegisterScreenContent(
+            uiState = RegisterUiState(),
+            onNombresChange = {},
+            onApellidosChange = {},
+            onEmailChange = {},
+            onPasswordChange = {},
+            onConfirmPasswordChange = {},
+            onRegister = {},
+            onNavigateBack = {}
+        )
     }
 }
 

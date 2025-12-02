@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
@@ -116,4 +117,18 @@ fun MenuButton(icon: ImageVector, text: String, onClick: () -> Unit) {
 fun getCurrentDateTime(): String {
     val sdf = SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.getDefault())
     return sdf.format(Date())
+}
+
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+fun MainMenuScreenPreview() {
+    MaterialTheme {
+        MainMenuScreen(
+            onNavigateToUserManagement = {},
+            onNavigateToSensors = {},
+            onNavigateToDeveloper = {},
+            onNavigateToEditProfile = {},
+            onLogout = {}
+        )
+    }
 }

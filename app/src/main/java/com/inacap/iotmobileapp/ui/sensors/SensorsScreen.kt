@@ -1,9 +1,7 @@
 package com.inacap.iotmobileapp.ui.sensors
 
 import android.content.Context
-import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.CameraManager
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -15,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -22,7 +21,7 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import com.inacap.iotmobileapp.ui.components.AppTopBar
-import kotlinx.coroutines.delay
+import com.inacap.iotmobileapp.ui.theme.IoTMobileAppTheme
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
@@ -35,9 +34,40 @@ fun SensorsScreen(onNavigateBack: () -> Unit) {
     val isLoading by viewModel.isLoading.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
 
+    // Preparamos los datos para la vista
+    val city = sensorData?.city ?: "Cargando..."
     val temperature = sensorData?.temperature ?: 0.0
     val humidity = sensorData?.humidity ?: 0
 
+    SensorsScreenContent(
+        city = city,
+        temperature = temperature,
+        humidity = humidity,
+        isLoading = isLoading,
+        errorMessage = errorMessage,
+        onNavigateBack = onNavigateBack,
+        onToggleFlashlight = { turnOn ->
+            if (cameraPermissionState.status.isGranted) {
+                toggleFlashlight(context, turnOn)
+                true
+            } else {
+                cameraPermissionState.launchPermissionRequest()
+                false
+            }
+        }
+    )
+}
+
+@Composable
+fun SensorsScreenContent(
+    city: String,
+    temperature: Double,
+    humidity: Int,
+    isLoading: Boolean,
+    errorMessage: String,
+    onNavigateBack: () -> Unit,
+    onToggleFlashlight: (Boolean) -> Boolean
+) {
     var bulbOn by remember { mutableStateOf(false) }
     var flashOn by remember { mutableStateOf(false) }
     var bulbMessage by remember { mutableStateOf("") }
@@ -58,7 +88,7 @@ fun SensorsScreen(onNavigateBack: () -> Unit) {
         ) {
             // Título y estado
             Text(
-                text = sensorData?.city ?: "Cargando...",
+                text = city,
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary
@@ -137,12 +167,11 @@ fun SensorsScreen(onNavigateBack: () -> Unit) {
                     modifier = Modifier
                         .size(60.dp)
                         .clickable {
-                            if (cameraPermissionState.status.isGranted) {
-                                flashOn = !flashOn
-                                toggleFlashlight(context, flashOn)
+                            val newState = !flashOn
+                            val success = onToggleFlashlight(newState)
+                            if (success) {
+                                flashOn = newState
                                 flashMessage = if (flashOn) "Linterna activada" else "Linterna desactivada"
-                            } else {
-                                cameraPermissionState.launchPermissionRequest()
                             }
                         }
                 )
@@ -162,5 +191,21 @@ fun toggleFlashlight(context: Context, turnOn: Boolean) {
         cameraManager.setTorchMode(cameraId, turnOn)
     } catch (e: Exception) {
         e.printStackTrace()
+    }
+}
+
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+fun SensorsScreenSimplePreview() {
+    IoTMobileAppTheme {
+        SensorsScreenContent(
+            city = "Santiago (Simulado)",
+            temperature = 25.5,
+            humidity = 60,
+            isLoading = false,
+            errorMessage = "",
+            onNavigateBack = {},
+            onToggleFlashlight = { true }
+        )
     }
 }

@@ -10,6 +10,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -17,6 +18,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.inacap.iotmobileapp.data.database.AppDatabase
 import com.inacap.iotmobileapp.data.database.entities.DeveloperProfile
 import com.inacap.iotmobileapp.ui.components.*
+import com.inacap.iotmobileapp.ui.theme.IoTMobileAppTheme
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -38,6 +40,39 @@ fun EditProfileScreen(
         viewModel.loadProfile(userId)
     }
 
+    EditProfileScreenContent(
+        uiState = uiState,
+        onAvatarChange = viewModel::onAvatarChange,
+        onFullNameChange = viewModel::onFullNameChange,
+        onRoleChange = viewModel::onRoleChange,
+        onEmailChange = viewModel::onEmailChange,
+        onInstitutionChange = viewModel::onInstitutionChange,
+        onCareerChange = viewModel::onCareerChange,
+        onSectionChange = viewModel::onSectionChange,
+        onGithubChange = viewModel::onGithubChange,
+        onLinkedinChange = viewModel::onLinkedinChange,
+        onPortfolioChange = viewModel::onPortfolioChange,
+        onSave = { viewModel.onSave(userId, onNavigateBack) },
+        onNavigateBack = onNavigateBack
+    )
+}
+
+@Composable
+fun EditProfileScreenContent(
+    uiState: EditProfileUiState,
+    onAvatarChange: (String) -> Unit,
+    onFullNameChange: (String) -> Unit,
+    onRoleChange: (String) -> Unit,
+    onEmailChange: (String) -> Unit,
+    onInstitutionChange: (String) -> Unit,
+    onCareerChange: (String) -> Unit,
+    onSectionChange: (String) -> Unit,
+    onGithubChange: (String) -> Unit,
+    onLinkedinChange: (String) -> Unit,
+    onPortfolioChange: (String) -> Unit,
+    onSave: () -> Unit,
+    onNavigateBack: () -> Unit
+) {
     Scaffold(
         topBar = {
             AppTopBar(title = "EDITAR MI PERFIL", onNavigateBack = onNavigateBack)
@@ -60,7 +95,7 @@ fun EditProfileScreen(
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     listOf("👨‍💻", "👩‍💻", "🧑‍💻", "😎", "🚀", "💡").forEach { emoji ->
                         ElevatedButton(
-                            onClick = { viewModel.onAvatarChange(emoji) },
+                            onClick = { onAvatarChange(emoji) },
                             colors = ButtonDefaults.elevatedButtonColors(
                                 containerColor = if (uiState.avatarEmoji == emoji)
                                     MaterialTheme.colorScheme.primaryContainer
@@ -76,21 +111,21 @@ fun EditProfileScreen(
 
                 AppTextField(
                     value = uiState.fullName,
-                    onValueChange = { viewModel.onFullNameChange(it) },
+                    onValueChange = onFullNameChange,
                     label = "Nombre Completo"
                 )
                 Spacer(modifier = Modifier.height(12.dp))
 
                 AppTextField(
                     value = uiState.role,
-                    onValueChange = { viewModel.onRoleChange(it) },
+                    onValueChange = onRoleChange,
                     label = "Rol (ej: Full Stack Developer)"
                 )
                 Spacer(modifier = Modifier.height(12.dp))
 
                 AppTextField(
                     value = uiState.email,
-                    onValueChange = { viewModel.onEmailChange(it) },
+                    onValueChange = onEmailChange,
                     label = "Email Institucional",
                     keyboardType = KeyboardType.Email
                 )
@@ -98,21 +133,21 @@ fun EditProfileScreen(
 
                 AppTextField(
                     value = uiState.institution,
-                    onValueChange = { viewModel.onInstitutionChange(it) },
+                    onValueChange = onInstitutionChange,
                     label = "Institución (ej: INACAP La Serena)"
                 )
                 Spacer(modifier = Modifier.height(12.dp))
 
                 AppTextField(
                     value = uiState.career,
-                    onValueChange = { viewModel.onCareerChange(it) },
+                    onValueChange = onCareerChange,
                     label = "Carrera"
                 )
                 Spacer(modifier = Modifier.height(12.dp))
 
                 AppTextField(
                     value = uiState.section,
-                    onValueChange = { viewModel.onSectionChange(it) },
+                    onValueChange = onSectionChange,
                     label = "Sección (ej: 001V)"
                 )
                 Spacer(modifier = Modifier.height(16.dp))
@@ -125,28 +160,28 @@ fun EditProfileScreen(
 
                 AppTextField(
                     value = uiState.github,
-                    onValueChange = { viewModel.onGithubChange(it) },
+                    onValueChange = onGithubChange,
                     label = "GitHub (ej: github.com/usuario)"
                 )
                 Spacer(modifier = Modifier.height(12.dp))
 
                 AppTextField(
                     value = uiState.linkedin,
-                    onValueChange = { viewModel.onLinkedinChange(it) },
+                    onValueChange = onLinkedinChange,
                     label = "LinkedIn (ej: linkedin.com/in/usuario)"
                 )
                 Spacer(modifier = Modifier.height(12.dp))
 
                 AppTextField(
                     value = uiState.portfolio,
-                    onValueChange = { viewModel.onPortfolioChange(it) },
+                    onValueChange = onPortfolioChange,
                     label = "Portafolio (opcional)"
                 )
                 Spacer(modifier = Modifier.height(24.dp))
 
                 AppButton(
                     text = "GUARDAR PERFIL",
-                    onClick = { viewModel.onSave(userId, onNavigateBack) }
+                    onClick = onSave
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -154,6 +189,35 @@ fun EditProfileScreen(
                 SuccessMessage(message = uiState.successMessage)
             }
         }
+    }
+}
+
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+fun EditProfileScreenPreview() {
+    IoTMobileAppTheme {
+        EditProfileScreenContent(
+            uiState = EditProfileUiState(
+                fullName = "Juan Pérez",
+                role = "Estudiante",
+                email = "juan.perez@inacapmail.cl",
+                institution = "INACAP",
+                career = "Informática",
+                section = "001D"
+            ),
+            onAvatarChange = {},
+            onFullNameChange = {},
+            onRoleChange = {},
+            onEmailChange = {},
+            onInstitutionChange = {},
+            onCareerChange = {},
+            onSectionChange = {},
+            onGithubChange = {},
+            onLinkedinChange = {},
+            onPortfolioChange = {},
+            onSave = {},
+            onNavigateBack = {}
+        )
     }
 }
 

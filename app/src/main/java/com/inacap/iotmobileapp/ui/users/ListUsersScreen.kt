@@ -10,6 +10,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -18,6 +19,7 @@ import com.inacap.iotmobileapp.data.database.entities.User
 import com.inacap.iotmobileapp.data.repository.UserRepository
 import com.inacap.iotmobileapp.ui.components.AppTextField
 import com.inacap.iotmobileapp.ui.components.AppTopBar
+import com.inacap.iotmobileapp.ui.theme.IoTMobileAppTheme
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -36,6 +38,20 @@ fun ListUsersScreen(
         )
     )
     val users by viewModel.users.collectAsState()
+
+    ListUsersScreenContent(
+        users = users,
+        onNavigateBack = onNavigateBack,
+        onNavigateToModify = onNavigateToModify
+    )
+}
+
+@Composable
+fun ListUsersScreenContent(
+    users: List<User>,
+    onNavigateBack: () -> Unit,
+    onNavigateToModify: (Long) -> Unit
+) {
     var searchQuery by remember { mutableStateOf("") }
 
     Scaffold(
@@ -81,6 +97,25 @@ fun UserListItem(user: User, onClick: () -> Unit) {
             Text("${user.nombres} ${user.apellidos}", fontWeight = FontWeight.Bold)
             Text(user.email, style = MaterialTheme.typography.bodySmall)
         }
+    }
+}
+
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+fun ListUsersScreenPreview() {
+    // Datos de prueba
+    val dummyUsers = listOf(
+        User(id = 1, nombres = "Juan", apellidos = "Pérez", email = "juan@example.com", password = ""),
+        User(id = 2, nombres = "María", apellidos = "González", email = "maria@example.com", password = ""),
+        User(id = 3, nombres = "Admin", apellidos = "System", email = "admin@inacap.cl", password = "")
+    )
+
+    IoTMobileAppTheme {
+        ListUsersScreenContent(
+            users = dummyUsers,
+            onNavigateBack = {},
+            onNavigateToModify = {}
+        )
     }
 }
 

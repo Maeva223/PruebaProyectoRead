@@ -17,6 +17,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -37,6 +38,27 @@ fun LoginScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
+    LoginScreenContent(
+        uiState = uiState,
+        onEmailChange = viewModel::onEmailChange,
+        onPasswordChange = viewModel::onPasswordChange,
+        onTogglePasswordVisibility = viewModel::togglePasswordVisibility,
+        onLogin = { viewModel.onLogin(onNavigateToMainMenu) },
+        onNavigateToRegister = onNavigateToRegister,
+        onNavigateToRecovery = onNavigateToRecovery
+    )
+}
+
+@Composable
+fun LoginScreenContent(
+    uiState: LoginUiState,
+    onEmailChange: (String) -> Unit,
+    onPasswordChange: (String) -> Unit,
+    onTogglePasswordVisibility: () -> Unit,
+    onLogin: () -> Unit,
+    onNavigateToRegister: () -> Unit,
+    onNavigateToRecovery: () -> Unit
+) {
     // Determinar cuál animación mostrar según el estado
     val animationRes = when (uiState.animationState) {
         LoginAnimationState.IDLE -> R.raw.login_idle
@@ -83,7 +105,7 @@ fun LoginScreen(
         // Campo de Email/Usuario
         AppTextField(
             value = uiState.email,
-            onValueChange = { viewModel.onEmailChange(it) },
+            onValueChange = onEmailChange,
             label = "INGRESE USUARIO",
             keyboardType = KeyboardType.Email,
             isError = uiState.errorMessage.isNotEmpty()
@@ -94,7 +116,7 @@ fun LoginScreen(
         // Campo de Contraseña con botón de mostrar/ocultar
         OutlinedTextField(
             value = uiState.password,
-            onValueChange = { viewModel.onPasswordChange(it) },
+            onValueChange = onPasswordChange,
             label = { Text("INGRESE CLAVE") },
             modifier = Modifier.fillMaxWidth(),
             visualTransformation = if (uiState.passwordVisible)
@@ -102,7 +124,7 @@ fun LoginScreen(
             else
                 PasswordVisualTransformation(),
             trailingIcon = {
-                IconButton(onClick = { viewModel.togglePasswordVisibility() }) {
+                IconButton(onClick = onTogglePasswordVisibility) {
                     Icon(
                         imageVector = if (uiState.passwordVisible)
                             Icons.Filled.Visibility
@@ -121,9 +143,7 @@ fun LoginScreen(
         // Botón de Ingresar
         AppButton(
             text = "INGRESAR",
-            onClick = {
-                viewModel.onLogin(onNavigateToMainMenu)
-            },
+            onClick = onLogin,
             enabled = !uiState.isLoading
         )
 
@@ -162,5 +182,21 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(16.dp))
             CircularProgressIndicator()
         }
+    }
+}
+
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+fun LoginScreenPreview() {
+    MaterialTheme {
+        LoginScreenContent(
+            uiState = LoginUiState(),
+            onEmailChange = {},
+            onPasswordChange = {},
+            onTogglePasswordVisibility = {},
+            onLogin = {},
+            onNavigateToRegister = {},
+            onNavigateToRecovery = {}
+        )
     }
 }

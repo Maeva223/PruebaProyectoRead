@@ -1,0 +1,128 @@
+========================================
+ANIMACIONES INTERACTIVAS DEL LOGIN
+========================================
+
+¡Tu Login ahora tiene animaciones Lottie REACTIVAS que responden a lo que haces!
+
+🎭 ANIMACIONES IMPLEMENTADAS:
+-----------------------------
+
+1. **IDLE (Saludando)** 👋
+   - Se muestra cuando estás en el login normalmente
+   - Animación en loop: personaje saludando
+   - Archivo: login_idle.json
+
+2. **PASSWORD SHOW (Ojos Abiertos)** 👀
+   - Se activa cuando MUESTRAS la contraseña
+   - Presiona el ícono del ojo en el campo de contraseña
+   - Animación: manos se quitan, ojos se abren
+   - Archivo: login_password_show.json
+
+3. **PASSWORD HIDE (Ojos Cerrados)** 🙈
+   - Se activa cuando OCULTAS la contraseña
+   - Presiona el ícono del ojo tachado
+   - Animación: manos cubren los ojos
+   - Archivo: login_password_hide.json
+
+4. **ERROR (Sacudiendo Cabeza)** ❌
+   - Se activa cuando ingresas credenciales INCORRECTAS
+   - Intenta hacer login con datos incorrectos
+   - Animación: personaje sacude la cabeza (NO!)
+   - Ojos tristes + boca triste
+   - Archivo: login_error.json
+
+5. **SUCCESS (Checkmark Feliz)** ✅
+   - Se activa cuando el LOGIN ES CORRECTO
+   - Ingresa con credenciales válidas
+   - Animación: checkmark aparece + personaje feliz
+   - Sonrisa grande
+   - Archivo: login_success.json
+
+🎮 CÓMO PROBAR LAS ANIMACIONES:
+-------------------------------
+
+1. **Animación IDLE:**
+   - Abre la app → ve al Login
+   - Verás el personaje saludando en loop
+
+2. **Animación SHOW/HIDE Password:**
+   - Escribe algo en el campo de contraseña
+   - Presiona el ícono del ojo → verás animación de MOSTRAR
+   - Presiona de nuevo → verás animación de OCULTAR
+   - ¡El personaje reacciona tapándose/destapándose los ojos!
+
+3. **Animación ERROR:**
+   - Ingresa email: test@test.com
+   - Ingresa password: wrongpassword
+   - Presiona INGRESAR
+   - ¡El personaje sacude la cabeza diciendo "NO"!
+
+4. **Animación SUCCESS:**
+   - Primero registra un usuario (Registrarse)
+   - Luego ingresa con ese usuario
+   - ¡El personaje celebra con un checkmark!
+   - Después de 1.5 segundos navega al menú
+
+🔧 DETALLES TÉCNICOS:
+---------------------
+
+**Flujo de Animaciones:**
+1. IDLE (loop infinito) → Estado por defecto
+2. PASSWORD_SHOW (1 vez) → Vuelve a IDLE después de 700ms
+3. PASSWORD_HIDE (1 vez) → Vuelve a IDLE después de 700ms
+4. ERROR (1 vez) → Vuelve a IDLE después de 1 segundo
+5. SUCCESS (1 vez) → Navega al menú después de 1.5 segundos
+
+**Archivos Modificados:**
+- LoginViewModel.kt → Estados de animación + triggers
+- LoginScreen.kt → Muestra animaciones Lottie reactivas
+- 5 archivos JSON de animaciones en res/raw/
+
+**Cómo Funciona:**
+- LoginViewModel tiene un estado `animationState`
+- Cuando algo pasa (error, éxito, show/hide), cambia el estado
+- LoginScreen observa ese estado y cambia la animación
+- Usa Lottie Compose para renderizar
+
+🎨 PERSONALIZAR ANIMACIONES:
+-----------------------------
+
+Si quieres cambiar las animaciones por otras de LottieFiles:
+
+1. Ve a: https://lottiefiles.com/
+
+2. Busca animaciones relacionadas:
+   - "character waving" (para idle)
+   - "error shake" (para error)
+   - "success checkmark" (para success)
+   - "eyes open closed" (para show/hide password)
+
+3. Descarga el archivo "Lottie JSON"
+
+4. Reemplaza el archivo correspondiente en:
+   C:\AndroidProjects\IoTMobileApp\app\src\main\res\raw\
+
+   - login_idle.json
+   - login_error.json
+   - login_success.json
+   - login_password_show.json
+   - login_password_hide.json
+
+5. Rebuild y listo!
+
+💡 TIPS:
+--------
+- Las animaciones son ligeras y no afectan el rendimiento
+- Se cargan solo cuando se necesitan (lazy loading)
+- Compatible con todos los dispositivos Android
+- Cumple 100% con los requisitos de la evaluación
+
+🎯 REQUISITO CUMPLIDO:
+----------------------
+✅ Animaciones interactivas que responden a eventos
+✅ Feedback visual inmediato al usuario
+✅ Experiencia de usuario moderna y profesional
+✅ Uso correcto de Lottie en Jetpack Compose
+
+¡Disfruta de tu Login animado! 🎉
+========================================

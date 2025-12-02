@@ -1,0 +1,64 @@
+========================================
+INSTRUCCIONES PARA CONFIGURAR LA API
+========================================
+
+La aplicación ahora consume datos REALES de temperatura y humedad desde OpenWeatherMap API.
+
+PASO 1: OBTENER TU API KEY GRATIS
+----------------------------------
+1. Ve a: https://openweathermap.org/
+2. Haz clic en "Sign In" (arriba a la derecha)
+3. Haz clic en "Create an Account" (crear cuenta gratis)
+4. Completa el formulario:
+   - Username: (tu nombre de usuario)
+   - Email: (tu correo electrónico)
+   - Password: (tu contraseña)
+5. Verifica tu email (revisa tu bandeja de entrada)
+6. Inicia sesión en OpenWeatherMap
+7. Ve a tu perfil → "API keys"
+8. Copia tu "Default API key" (algo como: a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6)
+
+PASO 2: CONFIGURAR LA API KEY EN EL PROYECTO
+---------------------------------------------
+1. Abre el archivo:
+   app/src/main/java/com/inacap/iotmobileapp/utils/ApiConfig.kt
+
+2. Busca la línea:
+   const val OPENWEATHER_API_KEY = "TU_API_KEY_AQUI"
+
+3. Reemplaza "TU_API_KEY_AQUI" con tu API key real:
+   const val OPENWEATHER_API_KEY = "a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6"
+
+4. Guarda el archivo
+
+PASO 3: COMPILAR Y EJECUTAR
+----------------------------
+1. En Android Studio, haz clic en "Build" → "Rebuild Project"
+2. Ejecuta la aplicación
+3. Ve a la pantalla "DATOS SENSOR"
+4. Verás datos reales de temperatura y humedad de La Serena, Chile
+
+NOTAS IMPORTANTES:
+------------------
+- La API key puede tardar 10-15 minutos en activarse después de crearla
+- Plan gratuito: 1,000 llamadas por día (suficiente para el proyecto)
+- La app actualiza los datos cada 10 segundos automáticamente
+- Ciudad configurada: La Serena, Chile (puedes cambiarla en ApiConfig.kt)
+
+CIUDADES DISPONIBLES (en ApiConfig.kt):
+---------------------------------------
+- CITY_LA_SERENA = "La Serena,CL"
+- CITY_SANTIAGO = "Santiago,CL"
+- CITY_VALPARAISO = "Valparaiso,CL"
+- CITY_CONCEPCION = "Concepcion,CL"
+
+Para cambiar la ciudad, edita DEFAULT_CITY en ApiConfig.kt
+
+SOLUCIÓN DE PROBLEMAS:
+---------------------
+- Si ves "API Key inválida": verifica que copiaste bien tu API key
+- Si ves "Error de conexión": verifica tu conexión a Internet
+- Si los datos no cambian: espera 10 segundos (intervalo de actualización)
+- Si aparecen valores simulados: es porque hay un error, revisa el mensaje
+
+========================================

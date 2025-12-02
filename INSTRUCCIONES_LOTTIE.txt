@@ -1,0 +1,74 @@
+========================================
+CÓMO PERSONALIZAR LA ANIMACIÓN LOTTIE
+========================================
+
+La aplicación ya tiene una animación Lottie básica configurada.
+Si quieres usar una animación diferente (más profesional), sigue estos pasos:
+
+PASO 1: DESCARGAR ANIMACIÓN GRATIS
+-----------------------------------
+1. Ve a: https://lottiefiles.com/free-animations
+
+2. Busca animaciones relacionadas con:
+   - "iot"
+   - "technology"
+   - "mobile app"
+   - "loading"
+   - "network"
+   - "smart home"
+
+3. Encuentra una que te guste y haz clic en ella
+
+4. Haz clic en el botón "Download" (Descargar)
+
+5. Selecciona "Lottie JSON" como formato
+
+6. Guarda el archivo (por ejemplo: animation.json)
+
+PASO 2: REEMPLAZAR ARCHIVO EN EL PROYECTO
+------------------------------------------
+1. Abre la carpeta del proyecto:
+   C:\AndroidProjects\IoTMobileApp\app\src\main\res\raw\
+
+2. Elimina el archivo existente:
+   splash_animation.json
+
+3. Copia tu nuevo archivo JSON descargado
+
+4. Renómbralo exactamente a:
+   splash_animation.json
+
+PASO 3: COMPILAR Y PROBAR
+--------------------------
+1. En Android Studio:
+   - Build → Clean Project
+   - Build → Rebuild Project
+
+2. Ejecuta la app (Run)
+
+3. Verás tu nueva animación en el Splash Screen!
+
+RECOMENDACIONES DE ANIMACIONES:
+--------------------------------
+Aquí hay algunas animaciones populares que se ven bien:
+
+1. IoT/Tecnología:
+   - https://lottiefiles.com/search?q=iot&category=animations
+
+2. Loading/Spinner:
+   - https://lottiefiles.com/search?q=loading&category=animations
+
+3. Network/Conectividad:
+   - https://lottiefiles.com/search?q=network&category=animations
+
+4. Mobile/App:
+   - https://lottiefiles.com/search?q=mobile%20app&category=animations
+
+SOLUCIÓN DE PROBLEMAS:
+----------------------
+- Si la app no compila: verifica que el archivo se llame exactamente "splash_animation.json"
+- Si la animación no se ve: verifica que descargaste "Lottie JSON" y no otro formato
+- Si se ve pixelada: la animación es de baja calidad, busca otra de mejor resolución
+
+¡Personaliza tu app y hazla única! 🚀
+========================================

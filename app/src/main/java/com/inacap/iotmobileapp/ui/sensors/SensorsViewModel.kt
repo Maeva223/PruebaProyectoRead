@@ -12,7 +12,8 @@ import kotlinx.coroutines.launch
 
 class SensorsViewModel : ViewModel() {
 
-    private val apiService = RetrofitClient.sensorApiService
+    // IMPORTANTE: Usamos el servicio de CLIMA (OpenWeather), no el de Backend
+    private val weatherService = RetrofitClient.weatherApiService
 
     private val _sensorData = MutableStateFlow<SensorData?>(null)
     val sensorData: StateFlow<SensorData?> = _sensorData
@@ -31,7 +32,7 @@ class SensorsViewModel : ViewModel() {
         viewModelScope.launch {
             while (true) {
                 fetchSensorData()
-                delay(10000) // Actualizar cada 10 segundos (API gratis tiene límite)
+                delay(10000) // 10 segundos
             }
         }
     }
@@ -42,8 +43,8 @@ class SensorsViewModel : ViewModel() {
             _errorMessage.value = ""
 
             try {
-                // Llamar a la API real de OpenWeatherMap
-                val response = apiService.getWeatherData(
+                // Llamada a OpenWeatherMap (Clima Real)
+                val response = weatherService.getWeatherData(
                     city = ApiConfig.DEFAULT_CITY,
                     apiKey = ApiConfig.OPENWEATHER_API_KEY
                 )
@@ -52,22 +53,22 @@ class SensorsViewModel : ViewModel() {
                     temperature = response.main.temp,
                     humidity = response.main.humidity,
                     city = response.name,
-                    timestamp = response.dt * 1000 // API devuelve segundos, Java usa millis
+                    timestamp = response.dt * 1000
                 )
 
             } catch (e: Exception) {
                 _errorMessage.value = when {
-                    e.message?.contains("401") == true -> "API Key inválida. Revisa ApiConfig.kt"
+                    e.message?.contains("401") == true -> "API Key inválida."
                     e.message?.contains("404") == true -> "Ciudad no encontrada"
-                    else -> "Error de conexión: ${e.message}"
+                    else -> "Error conexión: ${e.message}"
                 }
                 
-                // Si falla, mantenemos el último dato o mostramos null
+                // Si falla, mostramos estado vacío o simulado
                 if (_sensorData.value == null) {
-                    _sensorData.value = SensorData(
+                     _sensorData.value = SensorData(
                         temperature = 0.0,
                         humidity = 0,
-                        city = "Sin Conexión",
+                        city = "Sin señal",
                         timestamp = System.currentTimeMillis()
                     )
                 }

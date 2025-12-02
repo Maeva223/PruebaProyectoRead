@@ -7,41 +7,27 @@ import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.Query
 
-// --- Modelos para SENSORES ---
+// --- Modelos Comunes ---
 
-// Modelo de respuesta de TU Backend Node.js
 data class BackendSensorResponse(
     val temperature: Double,
     val humidity: Double,
     val timestamp: String
 )
 
-// Modelo simplificado para la UI
-data class SensorData(
-    val temperature: Double,
-    val humidity: Int,
-    val city: String,
-    val timestamp: Long
-)
-
-// --- Modelos para AUTENTICACIÓN ---
-
-// Lo que enviamos al Backend para registrar
 data class RegisterRequest(
     val name: String,
-    @SerializedName("last_name") val lastName: String, // Mapeamos last_name del JSON a lastName de Kotlin
+    @SerializedName("last_name") val lastName: String,
     val email: String,
     val password: String
 )
 
-// Lo que responde el Backend
 data class RegisterResponse(
-    val message: String?, // "Usuario registrado correctamente"
-    val error: String?,   // En caso de error
-    val success: Boolean? // Algunos backends lo usan
+    val message: String?,
+    val error: String?,
+    val success: Boolean?
 )
 
-// --- Modelos para OpenWeatherMap (Legacy) ---
 data class WeatherResponse(
     val main: MainData,
     val name: String,
@@ -55,20 +41,27 @@ data class MainData(
     @SerializedName("temp_max") val tempMax: Double
 )
 
-// --- INTERFAZ DE LA API ---
+data class SensorData(
+    val temperature: Double,
+    val humidity: Int,
+    val city: String,
+    val timestamp: Long
+)
 
-interface SensorApiService {
-
-    // 1. Obtener datos del sensor (Backend Node.js)
+// --- INTERFAZ 1: Tu Backend Node.js ---
+interface BackendApiService {
+    // Obtener datos simulados de tu servidor
     @GET("iot/data")
     suspend fun getBackendSensorData(): BackendSensorResponse
 
-    // 2. Registrar usuario (Backend Node.js)
-    // Usamos Response<T> para poder leer el código de error (400, 409, etc)
+    // Registrar usuario en tu servidor
     @POST("auth/register")
     suspend fun registerUser(@Body request: RegisterRequest): Response<RegisterResponse>
+}
 
-    // 3. OpenWeatherMap (Opcional)
+// --- INTERFAZ 2: OpenWeatherMap API ---
+interface WeatherApiService {
+    // Obtener clima real
     @GET("weather")
     suspend fun getWeatherData(
         @Query("q") city: String,

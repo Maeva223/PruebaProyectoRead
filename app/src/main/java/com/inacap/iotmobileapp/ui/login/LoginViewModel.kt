@@ -3,7 +3,10 @@ package com.inacap.iotmobileapp.ui.login
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.inacap.iotmobileapp.data.api.LoginRequest
+import com.inacap.iotmobileapp.data.api.RetrofitClient
 import com.inacap.iotmobileapp.data.database.AppDatabase
+import com.inacap.iotmobileapp.data.database.entities.User
 import com.inacap.iotmobileapp.data.repository.UserRepository
 import com.inacap.iotmobileapp.utils.Constants
 import com.inacap.iotmobileapp.utils.UserSession
@@ -22,6 +25,9 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
         database.userDao(),
         database.recoveryCodeDao()
     )
+    
+    // Cliente para conectar con el Backend Node.js
+    private val backendService = RetrofitClient.backendApiService
 
     private val _uiState = MutableStateFlow(LoginUiState())
     val uiState: StateFlow<LoginUiState> = _uiState
@@ -44,33 +50,82 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
         val email = _uiState.value.email.trim()
         val password = _uiState.value.password
 
-        // Validaciones
+        // Validaciones básicas
         if (email.isEmpty() || password.isEmpty()) {
-            _uiState.value = _uiState.value.copy(
-                errorMessage = "Campos obligatorios vacíos"
-            )
+            _uiState.value = _uiState.value.copy(errorMessage = "Campos obligatorios vacíos")
             return
         }
 
         if (!Validators.isValidEmail(email)) {
-            _uiState.value = _uiState.value.copy(
-                errorMessage = "Formato de email inválido"
-            )
+            _uiState.value = _uiState.value.copy(errorMessage = "Formato de email inválido")
             return
         }
 
         _uiState.value = _uiState.value.copy(isLoading = true)
 
         viewModelScope.launch {
+            var backendSuccess = false
+            var backendErrorMsg = ""
+
+            // 1. Intentar Login en el Backend (Nube)
             try {
-                // Verificar si el usuario está bloqueado
+                val loginRequest = LoginRequest(email = email, password = password)
+                val response = backendService.loginUser(loginRequest)
+
+                if (response.isSuccessful && response.body()?.success == true) {
+                    // Login en Nube EXITOSO
+                    backendSuccess = true
+                    val backendUser = response.body()?.user
+                    
+                    // Sincronizar: Verificar si el usuario existe localmente, si no, crearlo
+                    if (backendUser != null) {
+                        val localUser = repository.getUserByEmail(email)
+                        if (localUser == null) {
+                            val newUser = User(
+                                nombres = backendUser.name,
+                                apellidos = "", 
+                                email = backendUser.email,
+                                password = password
+                            )
+                            repository.registerUser(newUser)
+                        }
+                    }
+                    
+                    // Login exitoso
+                    handleLocalLoginSuccess(email, onSuccess)
+                    return@launch
+                } else {
+                    // El servidor respondió, pero fue error (ej: 401 Password incorrecta)
+                    if (response.code() == 401) {
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            errorMessage = "Clave incorrecta (Servidor)"
+                        )
+                        triggerErrorAnimation()
+                        return@launch // No intentamos local si el servidor dijo explícitamente que la clave está mal
+                    } else if (response.code() == 404) {
+                         // Usuario no existe en servidor
+                         backendErrorMsg = "Usuario no encontrado en servidor"
+                    } else {
+                        backendErrorMsg = "Error servidor: ${response.code()}"
+                    }
+                }
+            } catch (e: Exception) {
+                // Error de conexión real (servidor apagado, sin internet)
+                backendErrorMsg = "Sin conexión al servidor"
+            }
+
+            // 2. Si falló la conexión o el usuario no estaba en nube, intentamos Login Local (Offline)
+            try {
                 val user = repository.getUserByEmail(email)
 
                 if (user == null) {
+                    // Si no existe localmente y falló el backend
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
-                        errorMessage = "Credenciales inválidas"
+                        errorMessage = if(backendErrorMsg.isNotEmpty()) backendErrorMsg else "Credenciales inválidas (Local)"
                     )
+                    triggerErrorAnimation()
                     return@launch
                 }
 
@@ -82,70 +137,65 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
                     return@launch
                 }
 
-                // Intentar login
                 val loggedUser = repository.login(email, password)
 
                 if (loggedUser != null) {
-                    // Login exitoso, resetear intentos fallidos
-                    repository.updateFailedAttempts(email, 0)
-
-                    // Guardar sesión del usuario
-                    UserSession.login(loggedUser.id)
-
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        successMessage = "Login correcto"
-                    )
-
-                    // Trigger animación de éxito
-                    triggerSuccessAnimation()
-
-                    // Esperar un poco para que se vea la animación
-                    kotlinx.coroutines.delay(1500)
-                    onSuccess()
+                    handleLocalLoginSuccess(email, onSuccess)
                 } else {
-                    // Login fallido, incrementar intentos
-                    val failedAttempts = user.failedLoginAttempts + 1
-
-                    repository.updateFailedAttempts(email, failedAttempts)
-
-                    // Bloquear si se alcanza el máximo de intentos
-                    if (failedAttempts >= Constants.MAX_LOGIN_ATTEMPTS) {
-                        repository.updateBlockedStatus(email, true)
-                        _uiState.value = _uiState.value.copy(
-                            isLoading = false,
-                            errorMessage = "Usuario bloqueado por múltiples intentos fallidos"
-                        )
-                        triggerErrorAnimation()
-                    } else {
-                        _uiState.value = _uiState.value.copy(
-                            isLoading = false,
-                            errorMessage = "Credenciales inválidas. Intentos restantes: ${Constants.MAX_LOGIN_ATTEMPTS - failedAttempts}"
-                        )
-                        triggerErrorAnimation()
-                    }
+                    // Existe el usuario local pero la clave está mal
+                    handleLoginFailure(user, email)
                 }
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    errorMessage = "Error al iniciar sesión: ${e.message}"
+                    errorMessage = "Error: ${e.message}"
                 )
             }
         }
     }
 
-    fun clearMessages() {
+    private suspend fun handleLocalLoginSuccess(email: String, onSuccess: () -> Unit) {
+        repository.updateFailedAttempts(email, 0)
+        val user = repository.getUserByEmail(email)
+        if (user != null) {
+            UserSession.login(user.id)
+        }
+
         _uiState.value = _uiState.value.copy(
-            errorMessage = "",
-            successMessage = ""
+            isLoading = false,
+            successMessage = "Login correcto"
         )
+
+        triggerSuccessAnimation()
+        kotlinx.coroutines.delay(1500)
+        onSuccess()
+    }
+
+    private suspend fun handleLoginFailure(user: User, email: String) {
+        val failedAttempts = user.failedLoginAttempts + 1
+        repository.updateFailedAttempts(email, failedAttempts)
+
+        if (failedAttempts >= Constants.MAX_LOGIN_ATTEMPTS) {
+            repository.updateBlockedStatus(email, true)
+            _uiState.value = _uiState.value.copy(
+                isLoading = false,
+                errorMessage = "Usuario bloqueado por intentos"
+            )
+        } else {
+            _uiState.value = _uiState.value.copy(
+                isLoading = false,
+                errorMessage = "Clave incorrecta. Intentos: ${Constants.MAX_LOGIN_ATTEMPTS - failedAttempts}"
+            )
+        }
+        triggerErrorAnimation()
+    }
+
+    fun clearMessages() {
+        _uiState.value = _uiState.value.copy(errorMessage = "", successMessage = "")
     }
 
     fun setSuccessMessage(message: String) {
-        _uiState.value = _uiState.value.copy(
-            successMessage = message,
-            errorMessage = ""
-        )
+        _uiState.value = _uiState.value.copy(successMessage = message, errorMessage = "")
     }
 
     fun togglePasswordVisibility() {
@@ -154,7 +204,6 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
             passwordVisible = newVisibility,
             animationState = if (newVisibility) LoginAnimationState.PASSWORD_SHOW else LoginAnimationState.PASSWORD_HIDE
         )
-        // Volver a idle después de la animación
         viewModelScope.launch {
             kotlinx.coroutines.delay(700)
             if (_uiState.value.animationState == LoginAnimationState.PASSWORD_SHOW ||
@@ -166,7 +215,6 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
 
     private fun triggerErrorAnimation() {
         _uiState.value = _uiState.value.copy(animationState = LoginAnimationState.ERROR)
-        // Volver a idle después de la animación
         viewModelScope.launch {
             kotlinx.coroutines.delay(1000)
             _uiState.value = _uiState.value.copy(animationState = LoginAnimationState.IDLE)
@@ -178,16 +226,7 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
     }
 }
 
-/**
- * Estado de la UI de Login
- */
-enum class LoginAnimationState {
-    IDLE,           // Saludando
-    PASSWORD_SHOW,  // Mostrando password
-    PASSWORD_HIDE,  // Ocultando password
-    ERROR,          // Error - sacudir cabeza
-    SUCCESS         // Éxito - checkmark
-}
+enum class LoginAnimationState { IDLE, PASSWORD_SHOW, PASSWORD_HIDE, ERROR, SUCCESS }
 
 data class LoginUiState(
     val email: String = "",

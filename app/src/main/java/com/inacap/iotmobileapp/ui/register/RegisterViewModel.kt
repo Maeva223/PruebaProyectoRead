@@ -103,3 +103,15 @@ class RegisterViewModel(application: Application) : AndroidViewModel(application
         }
     }
 }
+
+// Definición del estado de la UI para el registro
+data class RegisterUiState(
+    val nombres: String = "",
+    val apellidos: String = "",
+    val email: String = "",
+    val password: String = "",
+    val confirmPassword: String = "",
+    val isLoading: Boolean = false,
+    val errorMessage: String = "",
+    val successMessage: String = ""
+)

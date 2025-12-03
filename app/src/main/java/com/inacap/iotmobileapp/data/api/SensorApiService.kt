@@ -15,6 +15,7 @@ data class BackendSensorResponse(
     val timestamp: String
 )
 
+// --- Modelos Registro ---
 data class RegisterRequest(
     val name: String,
     @SerializedName("last_name") val lastName: String,
@@ -28,6 +29,28 @@ data class RegisterResponse(
     val success: Boolean?
 )
 
+// --- Modelos Login ---
+data class LoginRequest(
+    val email: String,
+    val password: String
+)
+
+data class LoginResponse(
+    val success: Boolean,
+    val token: String?,
+    val message: String?,
+    val user: BackendUser?
+)
+
+data class BackendUser(
+    val id: Long,
+    val name: String,
+    val email: String
+    // El backend no devuelve 'last_name' en el login según el código que vimos,
+    // pero si lo devolviera podríamos agregarlo aquí.
+)
+
+// --- Modelos OpenWeatherMap ---
 data class WeatherResponse(
     val main: MainData,
     val name: String,
@@ -57,6 +80,10 @@ interface BackendApiService {
     // Registrar usuario en tu servidor
     @POST("auth/register")
     suspend fun registerUser(@Body request: RegisterRequest): Response<RegisterResponse>
+
+    // Login de usuario en tu servidor
+    @POST("auth/login")
+    suspend fun loginUser(@Body request: LoginRequest): Response<LoginResponse>
 }
 
 // --- INTERFAZ 2: OpenWeatherMap API ---

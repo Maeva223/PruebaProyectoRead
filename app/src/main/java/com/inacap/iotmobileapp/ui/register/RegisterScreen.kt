@@ -12,19 +12,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.inacap.iotmobileapp.data.api.RegisterRequest
-import com.inacap.iotmobileapp.data.api.RetrofitClient
-import com.inacap.iotmobileapp.data.database.AppDatabase
-import com.inacap.iotmobileapp.data.database.entities.User
-import com.inacap.iotmobileapp.data.repository.UserRepository
 import com.inacap.iotmobileapp.ui.components.*
-import com.inacap.iotmobileapp.utils.Validators
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.launch
 
 @Composable
 fun RegisterScreen(
@@ -32,6 +21,7 @@ fun RegisterScreen(
     onRegisterSuccess: () -> Unit
 ) {
     val context = LocalContext.current
+    // Usamos el ViewModel que está definido en RegisterViewModel.kt
     val viewModel: RegisterViewModel = viewModel(
         factory = androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.getInstance(
             context.applicationContext as Application
@@ -110,105 +100,3 @@ fun RegisterScreenPreview() {
         )
     }
 }
-
-class RegisterViewModel(application: Application) : AndroidViewModel(application) {
-    private val database = AppDatabase.getDatabase(application)
-    private val repository = UserRepository(database.userDao(), database.recoveryCodeDao())
-    // Agregamos el servicio API
-    private val apiService = RetrofitClient.sensorApiService
-    
-    private val _uiState = MutableStateFlow(RegisterUiState())
-    val uiState: StateFlow<RegisterUiState> = _uiState
-
-    fun onNombresChange(value: String) { _uiState.value = _uiState.value.copy(nombres = value, errorMessage = "") }
-    fun onApellidosChange(value: String) { _uiState.value = _uiState.value.copy(apellidos = value, errorMessage = "") }
-    fun onEmailChange(value: String) { _uiState.value = _uiState.value.copy(email = value, errorMessage = "") }
-    fun onPasswordChange(value: String) { _uiState.value = _uiState.value.copy(password = value, errorMessage = "") }
-    fun onConfirmPasswordChange(value: String) { _uiState.value = _uiState.value.copy(confirmPassword = value, errorMessage = "") }
-
-    fun onRegister(onSuccess: () -> Unit) {
-        val nombres = _uiState.value.nombres.trim()
-        val apellidos = _uiState.value.apellidos.trim()
-        val email = _uiState.value.email.trim()
-        val password = _uiState.value.password
-
-        if (nombres.isEmpty() || apellidos.isEmpty() || email.isEmpty() || password.isEmpty()) {
-            _uiState.value = _uiState.value.copy(errorMessage = "Campos obligatorios vacíos")
-            return
-        }
-        if (!Validators.isValidName(nombres) || !Validators.isValidName(apellidos)) {
-            _uiState.value = _uiState.value.copy(errorMessage = "Nombres y apellidos solo letras")
-            return
-        }
-        if (!Validators.isValidEmail(email)) {
-            _uiState.value = _uiState.value.copy(errorMessage = "Email inválido")
-            return
-        }
-        if (!Validators.isValidPassword(password)) {
-            _uiState.value = _uiState.value.copy(errorMessage = "Contraseña débil. ${Validators.getPasswordErrorMessage(password)}")
-            return
-        }
-        if (password != _uiState.value.confirmPassword) {
-            _uiState.value = _uiState.value.copy(errorMessage = "Contraseñas no coinciden")
-            return
-        }
-
-        _uiState.value = _uiState.value.copy(isLoading = true)
-        
-        viewModelScope.launch {
-            try {
-                // 1. Intentar registrar en el Backend Node.js
-                val request = RegisterRequest(
-                    name = nombres,
-                    lastName = apellidos,
-                    email = email,
-                    password = password
-                )
-                
-                val response = apiService.registerUser(request)
-                
-                if (response.isSuccessful) {
-                    // Registro exitoso en Backend
-                    
-                    // 2. Guardar también en Base de Datos Local (para login offline o caché)
-                    val userLocal = User(nombres = nombres, apellidos = apellidos, email = email, password = password)
-                    val localResult = repository.registerUser(userLocal)
-                    
-                    localResult.fold(
-                        onSuccess = {
-                            _uiState.value = _uiState.value.copy(isLoading = false, successMessage = "Registro exitoso en Servidor y Local")
-                            kotlinx.coroutines.delay(1500)
-                            onSuccess()
-                        },
-                        onFailure = {
-                            // Si falla local pero funcionó en servidor, igual lo consideramos éxito (o advertencia)
-                             _uiState.value = _uiState.value.copy(isLoading = false, successMessage = "Registro exitoso (solo servidor)")
-                            kotlinx.coroutines.delay(1500)
-                            onSuccess()
-                        }
-                    )
-                } else {
-                    // Error del Backend (ej: 409 Conflict - Email ya existe)
-                    val errorBody = response.errorBody()?.string()
-                    val errorMsg = if (response.code() == 409) "El correo ya está registrado" else "Error del servidor: ${response.code()}"
-                    _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = errorMsg)
-                }
-            } catch (e: Exception) {
-                // Error de conexión (servidor caído, sin internet)
-                // Opción: Permitir registro solo local o mostrar error
-                _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = "Error de conexión: ${e.message}")
-            }
-        }
-    }
-}
-
-data class RegisterUiState(
-    val nombres: String = "",
-    val apellidos: String = "",
-    val email: String = "",
-    val password: String = "",
-    val confirmPassword: String = "",
-    val isLoading: Boolean = false,
-    val errorMessage: String = "",
-    val successMessage: String = ""
-)

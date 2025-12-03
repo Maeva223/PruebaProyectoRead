@@ -12,8 +12,8 @@ import kotlinx.coroutines.launch
 
 class SensorsViewModel : ViewModel() {
 
-    // IMPORTANTE: Usamos el servicio de CLIMA (OpenWeather), no el de Backend
-    private val weatherService = RetrofitClient.weatherApiService
+    // IMPORTANTE: Ahora usamos el servicio de tu Backend (Node.js)
+    private val backendService = RetrofitClient.backendApiService
 
     private val _sensorData = MutableStateFlow<SensorData?>(null)
     val sensorData: StateFlow<SensorData?> = _sensorData
@@ -32,7 +32,7 @@ class SensorsViewModel : ViewModel() {
         viewModelScope.launch {
             while (true) {
                 fetchSensorData()
-                delay(10000) // 10 segundos
+                delay(2000) // Actualizar cada 2 segundos
             }
         }
     }
@@ -43,32 +43,25 @@ class SensorsViewModel : ViewModel() {
             _errorMessage.value = ""
 
             try {
-                // Llamada a OpenWeatherMap (Clima Real)
-                val response = weatherService.getWeatherData(
-                    city = ApiConfig.DEFAULT_CITY,
-                    apiKey = ApiConfig.OPENWEATHER_API_KEY
-                )
+                // Llamada a tu Backend en AWS (http://54.85.65.240/iot/data)
+                val response = backendService.getBackendSensorData()
 
                 _sensorData.value = SensorData(
-                    temperature = response.main.temp,
-                    humidity = response.main.humidity,
-                    city = response.name,
-                    timestamp = response.dt * 1000
+                    temperature = response.temperature,
+                    humidity = response.humidity.toInt(), // Convertimos el Double a Int para la UI
+                    city = "Lab IoT (Node.js)", // Nombre fijo para tu backend
+                    timestamp = System.currentTimeMillis() // Usamos el tiempo actual
                 )
 
             } catch (e: Exception) {
-                _errorMessage.value = when {
-                    e.message?.contains("401") == true -> "API Key inválida."
-                    e.message?.contains("404") == true -> "Ciudad no encontrada"
-                    else -> "Error conexión: ${e.message}"
-                }
+                _errorMessage.value = "Error conectando al Backend: ${e.message}"
                 
-                // Si falla, mostramos estado vacío o simulado
+                // Si falla, mostramos estado desconectado
                 if (_sensorData.value == null) {
                      _sensorData.value = SensorData(
                         temperature = 0.0,
                         humidity = 0,
-                        city = "Sin señal",
+                        city = "Desconectado",
                         timestamp = System.currentTimeMillis()
                     )
                 }

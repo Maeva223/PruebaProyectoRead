@@ -76,23 +76,43 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
                     // Login en Nube EXITOSO
                     backendSuccess = true
                     val backendUser = response.body()?.user
-                    
+                    val token = response.body()?.token ?: ""
+
                     // Sincronizar: Verificar si el usuario existe localmente, si no, crearlo
                     if (backendUser != null) {
-                        val localUser = repository.getUserByEmail(email)
+                        var localUser = repository.getUserByEmail(email)
                         if (localUser == null) {
+                            // Crear usuario local con datos del backend
                             val newUser = User(
                                 nombres = backendUser.name,
-                                apellidos = "", 
+                                apellidos = "",
                                 email = backendUser.email,
-                                password = password
+                                password = password,
+                                token = token,
+                                rol = "OPERADOR", // Por defecto, el backend debería enviar esto
+                                estado = "ACTIVO",
+                                id_departamento = null // El backend debería enviar esto también
                             )
                             repository.registerUser(newUser)
+                            localUser = repository.getUserByEmail(email)
+                        } else {
+                            // Actualizar token en usuario local existente
+                            // NOTA: Necesitarías crear un método updateToken en repository
+                            // Por ahora, recreamos el user con token actualizado
+                            localUser = localUser.copy(
+                                token = token,
+                                estado = "ACTIVO"
+                            )
+                        }
+
+                        // Guardar usuario completo en sesión (con token)
+                        if (localUser != null) {
+                            UserSession.login(localUser)
                         }
                     }
-                    
+
                     // Login exitoso
-                    handleLocalLoginSuccess(email, onSuccess)
+                    handleBackendLoginSuccess(email, onSuccess)
                     return@launch
                 } else {
                     // El servidor respondió, pero fue error (ej: 401 Password incorrecta)
@@ -158,12 +178,27 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
         repository.updateFailedAttempts(email, 0)
         val user = repository.getUserByEmail(email)
         if (user != null) {
-            UserSession.login(user.id)
+            // ACTUALIZADO: Guardar usuario completo en sesión (incluye token, rol, departamento)
+            UserSession.login(user)
         }
 
         _uiState.value = _uiState.value.copy(
             isLoading = false,
             successMessage = "Login correcto"
+        )
+
+        triggerSuccessAnimation()
+        kotlinx.coroutines.delay(1500)
+        onSuccess()
+    }
+
+    private suspend fun handleBackendLoginSuccess(email: String, onSuccess: () -> Unit) {
+        // Similar a handleLocalLoginSuccess pero específico para backend
+        repository.updateFailedAttempts(email, 0)
+
+        _uiState.value = _uiState.value.copy(
+            isLoading = false,
+            successMessage = "Login correcto (Backend)"
         )
 
         triggerSuccessAnimation()

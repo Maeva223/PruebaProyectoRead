@@ -89,18 +89,18 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
                                 email = backendUser.email,
                                 password = password,
                                 token = token,
-                                rol = "OPERADOR", // Por defecto, el backend debería enviar esto
+                                rol = backendUser.rol ?: "OPERADOR",
                                 estado = "ACTIVO",
-                                id_departamento = null // El backend debería enviar esto también
+                                id_departamento = backendUser.id_departamento
                             )
                             repository.registerUser(newUser)
                             localUser = repository.getUserByEmail(email)
                         } else {
-                            // Actualizar token en usuario local existente
-                            // NOTA: Necesitarías crear un método updateToken en repository
-                            // Por ahora, recreamos el user con token actualizado
+                            // Actualizar token, rol e id_departamento del usuario local
                             localUser = localUser.copy(
                                 token = token,
+                                rol = backendUser.rol ?: localUser.rol,
+                                id_departamento = backendUser.id_departamento ?: localUser.id_departamento,
                                 estado = "ACTIVO"
                             )
                         }

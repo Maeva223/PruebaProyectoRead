@@ -13,6 +13,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.inacap.iotmobileapp.utils.UserSession
 import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.util.*
@@ -81,13 +82,18 @@ fun MainMenuScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             // NUEVOS BOTONES - Evaluación III: Sistema de Control de Acceso RFID
-            MenuButton(
-                icon = Icons.Default.Sensors,
-                text = "GESTIÓN DE SENSORES RFID",
-                onClick = onNavigateToSensorManagement,
-                color = Color(0xFF2196F3) // Azul
-            )
-            Spacer(modifier = Modifier.height(16.dp))
+            // Solo ADMIN puede gestionar sensores (registrar, activar, desactivar)
+            if (UserSession.isAdmin()) {
+                MenuButton(
+                    icon = Icons.Default.Sensors,
+                    text = "GESTIÓN DE SENSORES RFID",
+                    onClick = onNavigateToSensorManagement,
+                    color = Color(0xFF2196F3) // Azul
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+
+            // Llavero Digital disponible para todos (ADMIN y OPERADOR)
             MenuButton(
                 icon = Icons.Default.DoorFront,
                 text = "LLAVERO DIGITAL",

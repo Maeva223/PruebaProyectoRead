@@ -10,9 +10,8 @@ object ApiConfig {
     const val OPENWEATHER_API_KEY = "ba8bcdc16e2294be50b7db7fe4e48ec0"
 
     // URL base de tu servidor Backend Node.js
-    // IMPORTANTE: Si en el navegador te funciona sin poner :3000, aquí tampoco lo pongas.
-    // Usamos el puerto 80 (por defecto) que es el que te funcionó en Chrome.
-    const val BASE_URL_BACKEND = "http://54.85.65.240/"
+    // IMPORTANTE: Usar 10.0.2.2 para emulador Android Studio (mapea a localhost de tu PC)
+    const val BASE_URL_BACKEND = "http://10.0.2.2:3000/"
 
     // Ciudades de Chile disponibles
     const val CITY_LA_SERENA = "La Serena,CL"

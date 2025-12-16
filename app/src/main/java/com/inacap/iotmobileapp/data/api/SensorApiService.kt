@@ -45,9 +45,9 @@ data class LoginResponse(
 data class BackendUser(
     val id: Long,
     val name: String,
-    val email: String
-    // El backend no devuelve 'last_name' en el login según el código que vimos,
-    // pero si lo devolviera podríamos agregarlo aquí.
+    val email: String,
+    val rol: String? = null,
+    val id_departamento: Int? = null
 )
 
 // --- Modelos OpenWeatherMap ---

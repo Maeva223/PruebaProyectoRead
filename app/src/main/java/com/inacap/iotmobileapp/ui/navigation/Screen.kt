@@ -21,4 +21,8 @@ sealed class Screen(val route: String) {
     object Sensors : Screen("sensors")
     object Developer : Screen("developer")
     object EditProfile : Screen("edit_profile")
+
+    // NUEVAS RUTAS - Evaluación III: Sistema de Control de Acceso RFID
+    object SensorManagement : Screen("sensor_management")
+    object BarrierControl : Screen("barrier_control")
 }

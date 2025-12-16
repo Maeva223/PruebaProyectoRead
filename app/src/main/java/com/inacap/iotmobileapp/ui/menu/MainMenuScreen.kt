@@ -24,6 +24,8 @@ fun MainMenuScreen(
     onNavigateToSensors: () -> Unit,
     onNavigateToDeveloper: () -> Unit,
     onNavigateToEditProfile: () -> Unit,
+    onNavigateToSensorManagement: () -> Unit = {},
+    onNavigateToBarrierControl: () -> Unit = {},
     onLogout: () -> Unit
 ) {
     // Reloj en tiempo real
@@ -76,6 +78,22 @@ fun MainMenuScreen(
             MenuButton(icon = Icons.Default.Code, text = "DESARROLLADOR", onClick = onNavigateToDeveloper)
             Spacer(modifier = Modifier.height(16.dp))
             MenuButton(icon = Icons.Default.Edit, text = "EDITAR MI PERFIL", onClick = onNavigateToEditProfile)
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // NUEVOS BOTONES - Evaluación III: Sistema de Control de Acceso RFID
+            MenuButton(
+                icon = Icons.Default.Sensors,
+                text = "GESTIÓN DE SENSORES RFID",
+                onClick = onNavigateToSensorManagement,
+                color = Color(0xFF2196F3) // Azul
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            MenuButton(
+                icon = Icons.Default.DoorFront,
+                text = "LLAVERO DIGITAL",
+                onClick = onNavigateToBarrierControl,
+                color = Color(0xFF4CAF50) // Verde
+            )
 
             Spacer(modifier = Modifier.height(24.dp))
 
@@ -98,14 +116,19 @@ fun MainMenuScreen(
 }
 
 @Composable
-fun MenuButton(icon: ImageVector, text: String, onClick: () -> Unit) {
+fun MenuButton(
+    icon: ImageVector,
+    text: String,
+    onClick: () -> Unit,
+    color: Color? = null
+) {
     Button(
         onClick = onClick,
         modifier = Modifier
             .fillMaxWidth()
             .height(60.dp),
         colors = ButtonDefaults.buttonColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer
+            containerColor = color ?: MaterialTheme.colorScheme.primaryContainer
         )
     ) {
         Icon(icon, contentDescription = text, modifier = Modifier.size(24.dp))

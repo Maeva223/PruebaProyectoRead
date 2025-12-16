@@ -29,4 +29,10 @@ object RetrofitClient {
     val weatherApiService: WeatherApiService by lazy {
         weatherRetrofit.create(WeatherApiService::class.java)
     }
+
+    // --- CLIENTE 3: API de Sensores RFID y Control de Acceso (Evaluación III) ---
+    // Usa el mismo backend que el cliente 1
+    val rfidSensorApiService: RFIDSensorApiService by lazy {
+        backendRetrofit.create(RFIDSensorApiService::class.java)
+    }
 }

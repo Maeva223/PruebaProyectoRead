@@ -10,14 +10,25 @@ import com.inacap.iotmobileapp.data.database.dao.UserDao
 import com.inacap.iotmobileapp.data.database.entities.DeveloperProfile
 import com.inacap.iotmobileapp.data.database.entities.RecoveryCode
 import com.inacap.iotmobileapp.data.database.entities.User
+import com.inacap.iotmobileapp.data.database.entities.Departamento
+import com.inacap.iotmobileapp.data.database.entities.Sensor
+import com.inacap.iotmobileapp.data.database.entities.EventoAcceso
 
 /**
  * Base de datos principal de la aplicación
- * Contiene las tablas de usuarios, códigos de recuperación y perfiles de desarrollador
+ * Contiene las tablas de usuarios, códigos de recuperación, perfiles de desarrollador,
+ * y las nuevas tablas para el sistema de control de acceso RFID (Evaluación III)
  */
 @Database(
-    entities = [User::class, RecoveryCode::class, DeveloperProfile::class],
-    version = 2,
+    entities = [
+        User::class,
+        RecoveryCode::class,
+        DeveloperProfile::class,
+        Departamento::class,
+        Sensor::class,
+        EventoAcceso::class
+    ],
+    version = 3,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {

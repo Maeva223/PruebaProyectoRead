@@ -96,3 +96,70 @@ interface WeatherApiService {
         @Query("units") units: String = "metric"
     ): WeatherResponse
 }
+
+// --- INTERFAZ 3: API de Sensores RFID y Control de Acceso (Evaluación III) ---
+interface RFIDSensorApiService {
+
+    // ==================== GESTIÓN DE SENSORES ====================
+
+    @GET("api/sensors/department/{departmentId}")
+    suspend fun getSensorsByDepartment(
+        @retrofit2.http.Path("departmentId") departmentId: Int,
+        @retrofit2.http.Header("Authorization") token: String
+    ): Response<com.inacap.iotmobileapp.data.api.models.SensorResponse>
+
+    @POST("api/sensors/register")
+    suspend fun registerSensor(
+        @Body request: com.inacap.iotmobileapp.data.api.models.RegisterSensorRequest,
+        @retrofit2.http.Header("Authorization") token: String
+    ): Response<com.inacap.iotmobileapp.data.api.models.RegisterSensorResponse>
+
+    @retrofit2.http.PUT("api/sensors/{sensorId}/activate")
+    suspend fun activateSensor(
+        @retrofit2.http.Path("sensorId") sensorId: Int,
+        @retrofit2.http.Header("Authorization") token: String
+    ): Response<com.inacap.iotmobileapp.data.api.models.RegisterSensorResponse>
+
+    @retrofit2.http.PUT("api/sensors/{sensorId}/deactivate")
+    suspend fun deactivateSensor(
+        @retrofit2.http.Path("sensorId") sensorId: Int,
+        @retrofit2.http.Header("Authorization") token: String
+    ): Response<com.inacap.iotmobileapp.data.api.models.RegisterSensorResponse>
+
+    @retrofit2.http.PUT("api/sensors/{sensorId}/block")
+    suspend fun blockSensor(
+        @retrofit2.http.Path("sensorId") sensorId: Int,
+        @retrofit2.http.Header("Authorization") token: String
+    ): Response<com.inacap.iotmobileapp.data.api.models.RegisterSensorResponse>
+
+    @retrofit2.http.PUT("api/sensors/{sensorId}/mark-lost")
+    suspend fun markSensorAsLost(
+        @retrofit2.http.Path("sensorId") sensorId: Int,
+        @retrofit2.http.Header("Authorization") token: String
+    ): Response<com.inacap.iotmobileapp.data.api.models.RegisterSensorResponse>
+
+    @retrofit2.http.DELETE("api/sensors/{sensorId}")
+    suspend fun deleteSensor(
+        @retrofit2.http.Path("sensorId") sensorId: Int,
+        @retrofit2.http.Header("Authorization") token: String
+    ): Response<com.inacap.iotmobileapp.data.api.models.RegisterSensorResponse>
+
+    // ==================== CONTROL DE ACCESO ====================
+
+    @POST("api/access/manual-open")
+    suspend fun openBarrier(
+        @retrofit2.http.Header("Authorization") token: String
+    ): Response<com.inacap.iotmobileapp.data.api.models.ManualControlResponse>
+
+    @POST("api/access/manual-close")
+    suspend fun closeBarrier(
+        @retrofit2.http.Header("Authorization") token: String
+    ): Response<com.inacap.iotmobileapp.data.api.models.ManualControlResponse>
+
+    @GET("api/access/history/{departmentId}")
+    suspend fun getAccessHistory(
+        @retrofit2.http.Path("departmentId") departmentId: Int,
+        @Query("limit") limit: Int = 50,
+        @retrofit2.http.Header("Authorization") token: String
+    ): Response<com.inacap.iotmobileapp.data.api.models.EventoAccesoResponse>
+}

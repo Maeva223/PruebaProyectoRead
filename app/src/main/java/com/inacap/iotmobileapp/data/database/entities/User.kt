@@ -24,5 +24,11 @@ data class User(
     // Campos adicionales para control de sesión
     val createdAt: Long = System.currentTimeMillis(),
     val isBlocked: Boolean = false,
-    val failedLoginAttempts: Int = 0
+    val failedLoginAttempts: Int = 0,
+
+    // NUEVOS CAMPOS PARA EVALUACIÓN III - Sistema de Control de Acceso
+    val rol: String = "OPERADOR", // "ADMIN" o "OPERADOR"
+    val estado: String = "ACTIVO", // "ACTIVO", "INACTIVO", "BLOQUEADO"
+    val id_departamento: Int? = null, // FK a departamentos
+    val token: String? = null // JWT token del backend
 )

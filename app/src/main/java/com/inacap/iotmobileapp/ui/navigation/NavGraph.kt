@@ -20,6 +20,8 @@ import com.inacap.iotmobileapp.ui.users.ModifyUserScreen
 import com.inacap.iotmobileapp.ui.users.RegisterUserAdminScreen
 import com.inacap.iotmobileapp.ui.users.UserManagementScreen
 import com.inacap.iotmobileapp.utils.UserSession
+import com.inacap.iotmobileapp.ui.sensors.SensorManagementScreen
+import com.inacap.iotmobileapp.ui.barrier.BarrierControlScreen
 
 /**
  * Grafo de navegación principal de la aplicación
@@ -122,6 +124,12 @@ fun NavGraph(
                 onNavigateToEditProfile = {
                     navController.navigate(Screen.EditProfile.route)
                 },
+                onNavigateToSensorManagement = {
+                    navController.navigate(Screen.SensorManagement.route)
+                },
+                onNavigateToBarrierControl = {
+                    navController.navigate(Screen.BarrierControl.route)
+                },
                 onLogout = {
                     UserSession.logout()
                     navController.navigate(Screen.Login.route) {
@@ -207,6 +215,26 @@ fun NavGraph(
         composable(Screen.EditProfile.route) {
             EditProfileScreen(
                 userId = UserSession.getCurrentUserId(),
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        // NUEVAS PANTALLAS - Evaluación III: Sistema de Control de Acceso RFID
+
+        // Sensor Management Screen (Gestión de Sensores RFID)
+        composable(Screen.SensorManagement.route) {
+            SensorManagementScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        // Barrier Control Screen (Llavero Digital)
+        composable(Screen.BarrierControl.route) {
+            BarrierControlScreen(
                 onNavigateBack = {
                     navController.popBackStack()
                 }

@@ -24,7 +24,16 @@ fun SensorManagementScreen(
     val sensors by viewModel.sensors.collectAsState()
     val isAdmin by viewModel.isAdmin.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
+    val registrationSuccess by viewModel.registrationSuccess.collectAsState()
     var showAddDialog by remember { mutableStateOf(false) }
+
+    // Cerrar diálogo automáticamente cuando el registro sea exitoso
+    LaunchedEffect(registrationSuccess) {
+        if (registrationSuccess) {
+            showAddDialog = false
+            viewModel.resetRegistrationSuccess()
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -98,7 +107,7 @@ fun SensorManagementScreen(
                 onDismiss = { showAddDialog = false },
                 onConfirm = { mac, type, alias ->
                     viewModel.registerSensor(mac, type, alias)
-                    showAddDialog = false
+                    // El diálogo se cerrará automáticamente cuando registrationSuccess sea true
                 }
             )
         }

@@ -156,6 +156,9 @@ interface RFIDSensorApiService {
         @retrofit2.http.Header("Authorization") token: String
     ): Response<com.inacap.iotmobileapp.data.api.models.ManualControlResponse>
 
+    @GET("api/access/barrier-status")
+    suspend fun getBarrierStatus(): Response<com.inacap.iotmobileapp.data.api.models.BarrierStatusResponse>
+
     @GET("api/access/history/{departmentId}")
     suspend fun getAccessHistory(
         @retrofit2.http.Path("departmentId") departmentId: Int,

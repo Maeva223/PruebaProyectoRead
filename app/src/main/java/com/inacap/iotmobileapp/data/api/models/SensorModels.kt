@@ -75,3 +75,13 @@ data class ManualControlResponse(
     val mensaje: String,
     val usuario: String?
 )
+
+// Respuesta de consulta de estado de barrera (NUEVO - Para polling)
+data class BarrierStatusResponse(
+    val estado: String,                  // "ABIERTA" o "CERRADA"
+    val ultimaActualizacion: String,
+    val ultimoEvento: String?,
+    val departamento: Int?,
+    val usuario: Int?,
+    val tiempoAbierta: Int?              // Segundos abierta (null si cerrada)
+)

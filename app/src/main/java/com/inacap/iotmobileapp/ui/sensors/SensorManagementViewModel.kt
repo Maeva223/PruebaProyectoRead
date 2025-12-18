@@ -70,8 +70,12 @@ class SensorManagementViewModel(application: Application) : AndroidViewModel(app
         }
     }
 
+    private val _registrationSuccess = MutableStateFlow(false)
+    val registrationSuccess: StateFlow<Boolean> = _registrationSuccess
+
     fun registerSensor(mac: String, type: String, alias: String) {
         viewModelScope.launch {
+            _registrationSuccess.value = false  // Resetear estado
             try {
                 val user = UserSession.currentUser ?: return@launch
                 val token = user.token ?: ""
@@ -88,6 +92,7 @@ class SensorManagementViewModel(application: Application) : AndroidViewModel(app
                 if (response.isSuccessful) {
                     _message.value = "Sensor registrado exitosamente"
                     loadSensors()
+                    _registrationSuccess.value = true  // Indicar éxito para cerrar el diálogo
                 } else {
                     _message.value = "Error al registrar: ${response.message()}"
                 }
@@ -95,6 +100,10 @@ class SensorManagementViewModel(application: Application) : AndroidViewModel(app
                 _message.value = "Error: ${e.message}"
             }
         }
+    }
+
+    fun resetRegistrationSuccess() {
+        _registrationSuccess.value = false
     }
 
     fun activateSensor(sensorId: Int) {

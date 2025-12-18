@@ -1,6 +1,7 @@
 package com.inacap.iotmobileapp.ui.barrier
 
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.inacap.iotmobileapp.data.api.RetrofitClient
@@ -29,6 +30,58 @@ class BarrierControlViewModel(application: Application) : AndroidViewModel(appli
     private val _message = MutableStateFlow<String?>(null)
     val message: StateFlow<String?> = _message
 
+    init {
+        // Iniciar polling automáticamente cuando se crea el ViewModel
+        startPollingBarrierStatus()
+    }
+
+    /**
+     * POLLING: Consulta el estado de la barrera cada 2 segundos
+     * Mantiene sincronizada la app con el backend en tiempo real
+     */
+    private fun startPollingBarrierStatus() {
+        viewModelScope.launch {
+            while (true) {
+                try {
+                    val response = RetrofitClient.rfidSensorApiService.getBarrierStatus()
+
+                    if (response.isSuccessful) {
+                        val status = response.body()
+
+                        // Actualizar estado según respuesta del backend
+                        _barrierState.value = when (status?.estado) {
+                            "ABIERTA" -> BarrierState.OPEN
+                            "CERRADA" -> BarrierState.CLOSED
+                            else -> BarrierState.UNKNOWN
+                        }
+
+                        // Actualizar mensaje con información del tiempo abierta
+                        if (status?.estado == "ABIERTA" && status.tiempoAbierta != null) {
+                            val tiempoRestante = 10 - status.tiempoAbierta
+                            _message.value = "Barrera abierta (cierre automático en ${tiempoRestante}s)"
+                        } else if (status?.estado == "CERRADA") {
+                            if (status.ultimoEvento == "AUTO_CIERRE") {
+                                _message.value = "Barrera cerrada automáticamente"
+                            } else if (status.ultimoEvento == "CIERRE_MANUAL") {
+                                _message.value = "Barrera cerrada manualmente"
+                            }
+                        }
+
+                        Log.d("BarrierPolling", "Estado actualizado: ${status?.estado}")
+                    } else {
+                        Log.e("BarrierPolling", "Error: ${response.code()}")
+                    }
+                } catch (e: Exception) {
+                    Log.e("BarrierPolling", "Error consultando estado: ${e.message}")
+                    // No actualizar estado si hay error de conexión
+                }
+
+                // Esperar 2 segundos antes de volver a consultar
+                delay(2000)
+            }
+        }
+    }
+
     fun openBarrier() {
         viewModelScope.launch {
             _isLoading.value = true
@@ -50,16 +103,10 @@ class BarrierControlViewModel(application: Application) : AndroidViewModel(appli
                 val response = RetrofitClient.rfidSensorApiService.openBarrier(authToken)
 
                 if (response.isSuccessful) {
-                    _barrierState.value = BarrierState.OPEN
-                    _message.value = response.body()?.mensaje ?: "Barrera abierta"
-
-                    // Simular cierre automático después de 10 segundos
-                    delay(10000)
-                    _barrierState.value = BarrierState.CLOSED
-                    _message.value = "Barrera cerrada automáticamente"
+                    _message.value = response.body()?.mensaje ?: "Comando de apertura enviado"
+                    // El estado se actualizará automáticamente por el polling (cada 2 seg)
                 } else {
                     _message.value = "Error: ${response.message()}"
-                    _barrierState.value = BarrierState.UNKNOWN
                 }
             } catch (e: Exception) {
                 _message.value = "Error de conexión: ${e.message}"
@@ -91,11 +138,10 @@ class BarrierControlViewModel(application: Application) : AndroidViewModel(appli
                 val response = RetrofitClient.rfidSensorApiService.closeBarrier(authToken)
 
                 if (response.isSuccessful) {
-                    _barrierState.value = BarrierState.CLOSED
-                    _message.value = response.body()?.mensaje ?: "Barrera cerrada"
+                    _message.value = response.body()?.mensaje ?: "Comando de cierre enviado"
+                    // El estado se actualizará automáticamente por el polling (cada 2 seg)
                 } else {
                     _message.value = "Error: ${response.message()}"
-                    _barrierState.value = BarrierState.UNKNOWN
                 }
             } catch (e: Exception) {
                 _message.value = "Error de conexión: ${e.message}"
